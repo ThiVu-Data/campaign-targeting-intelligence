@@ -93,7 +93,7 @@ Some macroeconomic variables are highly correlated. Logistic Regression coeffici
 `notebooks/campaign_targeting_intelligence.ipynb`  
 Main analysis with saved outputs.
 
-`presentation/Campaign_Targeting_Intelligence_Portfolio_Final.pptx`  
+`presentation/Campaign_Targeting_Intelligencel.pptx`  
 Business presentation of the analysis and recommendations.
 
 `docs/model_results_temporal_test.csv`  
