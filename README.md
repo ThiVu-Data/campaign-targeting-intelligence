@@ -1,101 +1,124 @@
 # Campaign Targeting Intelligence
 
-**Data Analyst Portfolio Project | Python • Machine Learning • Customer Analytics • Business Decision Support**
+## Business Question
 
-## Business question
-**If the campaign team can only contact a limited share of customers, who should be contacted first?**
+If the campaign team can only contact a limited share of customers, who should be contacted first?
 
-The project ranks customers by predicted subscription probability, then turns those scores into contact-capacity scenarios such as Top 5%, 10%, 20% and 30%.
+This project uses historical bank marketing data to rank customers before contact and turn model scores into a practical contact list.
 
-## Data source
-**UCI Machine Learning Repository — Bank Marketing**
+## Key Result
 
-- Creators: S. Moro, P. Rita, P. Cortez
-- DOI: `10.24432/C5K306`
-- File used: `bank-additional-full.csv`
-- Records: **41,188**
-- Source fields: **20 inputs + outcome**
-- Period: **May 2008 – November 2010**
-- License: **CC BY 4.0**
+The baseline Logistic Regression achieved the highest PR-AUC at **0.527** on the later 20% temporal test set.
 
-Citation: Moro, S., Rita, P., & Cortez, P. (2014). *Bank Marketing* [Dataset]. UCI Machine Learning Repository. https://doi.org/10.24432/C5K306
+At **20% contact capacity**, the top **1,647 customers** captured **38.5% of actual subscribers**, with a cumulative lift of **1.93x**.
 
-## Analysis approach
+## Data
 
-### Use information available before contact
-`duration` is excluded because call duration is only known after a call starts. A separate leakage check shows why including it would make the score look better without making the model usable for pre-call targeting.
+**Dataset:** Bank Marketing  
+**Source:** UCI Machine Learning Repository  
+**File used:** `bank-additional-full.csv`  
+**Records:** 41,188  
+**Period:** May 2008 to November 2010  
+**License:** CC BY 4.0  
+**DOI:** 10.24432/C5K306
 
-### Test on a later period
-The source file is ordered by date. The earlier 80% is used for training and the later 20% for testing.
+Citation:
 
-- Train: **32,950 records**, subscription rate **6.4%**
-- Test: **8,238 records**, subscription rate **30.8%**
+Moro, S., Rita, P., & Cortez, P. (2014). Bank Marketing [Dataset]. UCI Machine Learning Repository.
 
-The difference shows a clear shift between the earlier and later periods.
+The dataset contains customer profile, contact context, campaign history and macroeconomic information.
 
-### Compare models for ranking
-Baseline Logistic Regression, class-weighted Logistic Regression, Random Forest and XGBoost are compared on the later test period.
+`duration` was excluded from the final targeting model because call duration is only known after a call starts. It would not be available when the contact list is created.
 
-The strongest PR-AUC in this run is **baseline Logistic Regression**:
-- PR-AUC: **0.527**
-- ROC-AUC: **0.748**
+## Approach
 
-More complex models did not improve ranking performance on this test period.
+1. Audited the source data and target distribution.
+2. Kept `unknown` as an explicit source category.
+3. Used the earlier 80% of records for training and the later 20% for testing.
+4. Excluded `duration` from the pre contact feature set.
+5. One hot encoded categorical fields and scaled numeric fields for Logistic Regression.
+6. Compared baseline Logistic Regression, class weighted Logistic Regression, Random Forest and XGBoost.
+7. Used PR-AUC as the main model selection metric because the target is imbalanced.
+8. Ranked customers by predicted subscription probability.
+9. Evaluated contact capacity at the Top 5%, 10%, 20% and 30% of the ranked list.
 
-### Turn scores into a contact decision
+## Model Comparison
 
-| Contact capacity | Customers | Subscribers captured | Capture rate | Cumulative lift |
-|---:|---:|---:|---:|---:|
-| 5% | 411 | 227 | 8.9% | 1.79x |
-| 10% | 823 | 469 | 18.5% | 1.85x |
-| 20% | 1,647 | 979 | 38.5% | 1.93x |
-| 30% | 2,471 | 1,362 | 53.6% | 1.79x |
+| Model | PR-AUC |
+| --- | ---: |
+| Logistic Regression (baseline) | **0.527** |
+| Logistic Regression (class weighted) | 0.521 |
+| Random Forest (class weighted) | 0.490 |
+| XGBoost (class weighted) | 0.412 |
 
-Each row is cumulative from the top of the ranked list. Cumulative lift does not have to decrease smoothly on a finite test set because predicted scores do not perfectly order actual outcomes.
+Baseline Logistic Regression was selected as the final ranking model.
 
-At **20% contact capacity**, the ranked list contains **1,647 customers** and captures **38.5% of subscribers** in the test period.
+## Contact Capacity
 
-## Explainability
-The final model is Logistic Regression, so the explainability file uses **Logistic Regression coefficients**.
+| Capacity | Customers | Subscribers Captured | Cumulative Lift |
+| --- | ---: | ---: | ---: |
+| Top 5% | 411 | 8.9% | 1.79x |
+| Top 10% | 823 | 18.5% | 1.85x |
+| Top 20% | 1,647 | **38.5%** | **1.93x** |
+| Top 30% | 2,471 | 53.6% | 1.79x |
 
-Coefficients describe associations inside the fitted model, not causal effects. Some macroeconomic features are highly correlated, so individual coefficients should be interpreted cautiously.
+Each row is cumulative from the top of the ranked list.
 
-## Campaign measurement
-The model estimates subscription propensity. It does not prove that a campaign caused a subscription.
+The Top 20% scenario is a useful example of how the model can support a capacity decision. It reduces the contact list to 1,647 customers while retaining 38.5% of the subscribers observed in the test period.
 
-For a future randomized campaign:
+## How I Would Use the Model
 
-**Incremental subscription rate = Target group rate − Holdout group rate**
+A campaign team could use the model in the following order:
 
-This project does not claim causal uplift or ROI because the source data does not contain a randomized treatment/control design, campaign cost or customer value.
+**Eligibility → Score → Rank → Select → Holdout → Measure**
+
+Business and compliance rules would be applied first. Eligible customers would then receive a model score and be ranked from highest to lowest. The team could select the top group based on available contact capacity.
+
+A random holdout group should be kept for measurement. The model predicts likelihood to subscribe, but it does not prove that the campaign caused the subscription.
+
+A future campaign could measure:
+
+`Incremental subscription rate = Target group rate - Holdout group rate`
 
 ## Limitations
-- Historical Portuguese bank telemarketing data may not transfer directly to another market.
-- The earlier and later periods have a large distribution shift.
-- Propensity prediction is not causal uplift modeling.
-- Campaign cost and customer value are not available in the source data.
-- Model performance should be monitored as customer behavior changes.
 
-## Repository structure
-```text
-├── README.md
-├── data/
-│   ├── bank-additional-full.csv
-│   └── bank-additional-names.txt
-├── notebooks/
-│   └── campaign_targeting_intelligence.ipynb
-├── presentation/
-│   └── Campaign_Targeting_Intelligence_Portfolio_Final.pptx
-├── docs/
-│   ├── DATA_SOURCE_AND_LICENSE.txt
-│   ├── FINAL_PORTFOLIO_AUDIT.md
-│   ├── model_results_temporal_test.csv
-│   ├── contact_capacity_scenarios.csv
-│   ├── logistic_regression_coefficients.csv
-│   ├── macroeconomic_feature_correlations.csv
-│   └── leakage_benchmark.csv
-└── requirements.txt
-```
+The data comes from historical bank telemarketing campaigns, and customer behavior changes over time. The subscription rate is also substantially different between the earlier training period and the later test period.
 
-## Portfolio summary
-Built a campaign-targeting workflow using a licensed UCI dataset, temporal validation and pre-contact features; compared multiple models and translated predicted probabilities into ranked contact-capacity scenarios for business decision support.
+The model predicts subscription probability rather than campaign uplift. Campaign cost and customer value are not available in the dataset, so this project does not estimate ROI or profit.
+
+Some macroeconomic variables are highly correlated. Logistic Regression coefficients are therefore useful for understanding the model score, but they should not be interpreted as causal effects.
+
+## Project Files
+
+`notebooks/campaign_targeting_intelligence.ipynb`  
+Main analysis with saved outputs.
+
+`presentation/Campaign_Targeting_Intelligence_Portfolio_Final.pptx`  
+Business presentation of the analysis and recommendations.
+
+`docs/model_results_temporal_test.csv`  
+Final model comparison results.
+
+`docs/contact_capacity_scenarios.csv`  
+Top 5%, 10%, 20% and 30% capacity results.
+
+`docs/logistic_regression_coefficients.csv`  
+Final Logistic Regression coefficients.
+
+`docs/macroeconomic_feature_correlations.csv`  
+Correlation check for macroeconomic variables.
+
+`docs/leakage_benchmark.csv`  
+Benchmark showing why `duration` should not be used in the deployable model.
+
+`docs/DATA_SOURCE_AND_LICENSE.txt`  
+Dataset source, citation and license information.
+
+## Tools
+
+Python, pandas, scikit-learn, XGBoost, matplotlib and Jupyter Notebook.
+
+## Profile
+
+**LinkedIn:** https://www.linkedin.com/in/thivu-data/  
+**GitHub:** https://github.com/ThiVu-Data
