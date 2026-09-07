@@ -1,0 +1,18 @@
+DATA SOURCE AND LICENSE
+Dataset: Bank Marketing
+Source: UCI Machine Learning Repository
+Creators: S. Moro, P. Rita, P. Cortez
+DOI: 10.24432/C5K306
+File used: bank-additional-full.csv
+Records: 41,188
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+
+Citation:
+Moro, S., Rita, P., & Cortez, P. (2014). Bank Marketing [Dataset].
+UCI Machine Learning Repository. https://doi.org/10.24432/C5K306
+
+Associated paper:
+Moro, S., Cortez, P., & Rita, P. (2014). A Data-Driven Approach to Predict the Success of Bank Telemarketing.
+Decision Support Systems. https://doi.org/10.1016/j.dss.2014.03.001
+
+No employer or confidential company data is included.
